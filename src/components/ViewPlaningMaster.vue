@@ -184,7 +184,7 @@ export default {
 
   created() {
     this.$store.dispatch("GET_SESSION");
-    //deneme
+    //selam
   }
 };
 </script>
