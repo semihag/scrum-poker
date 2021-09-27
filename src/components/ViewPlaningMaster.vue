@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <b-container v-if="Session != null">
       <b-row>
         <b-col>
@@ -30,7 +29,7 @@
 
       <b-row>
         <b-col cols="6">Story List</b-col>
-        <b-col v-if="ActiveStory !=null" cols="6">Active Story</b-col>
+        <b-col v-if="ActiveStory != null" cols="6">Active Story</b-col>
         <b-col v-else>OYLAMA SONA ERMİŞTİR</b-col>
       </b-row>
       <br />
@@ -52,7 +51,7 @@
           </b-table>
         </b-col>
 
-        <b-col v-if="ActiveStory !=null" cols="3" class="activeStory">
+        <b-col v-if="ActiveStory != null" cols="3" class="activeStory">
           Story {{ ActiveStory.storyName }}
           <br />
           <button
@@ -73,7 +72,7 @@
             >Please Vote</b-button
           >
         </b-col>
-        <b-col v-if="ActiveStory !=null" cols="3" class="scrumMasterPanel">
+        <b-col v-if="ActiveStory != null" cols="3" class="scrumMasterPanel">
           <p>Story {{ ActiveStory.storyName }} is active</p>
           <p>Scrum Master : {{ ActiveStory.scrumMasterScore }}</p>
           <p v-for="voterName in Session.voterNames" :key="voterName.id">
@@ -107,6 +106,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import { mapGetters } from "vuex";
 export default {
   data() {
@@ -148,19 +148,20 @@ export default {
       return this.ActiveStory.voters.find(x => x.voterName === name).voterPoint;
     },
     EndVoting() {
-      debugger;
       this.ActiveStory.storyPoint = this.finalScore;
-    
+
       this.finalScore = 0;
       let storyCount = this.Session.stories.length;
-      let currentStoryIndex = this.Session.stories.findIndex(s => s.storyName == this.ActiveStory.storyName);
-      if(currentStoryIndex + 1 < storyCount) {
-        this.Session.stories[currentStoryIndex+1].status = "Active";
+      let currentStoryIndex = this.Session.stories.findIndex(
+        s => s.storyName == this.ActiveStory.storyName
+      );
+      if (currentStoryIndex + 1 < storyCount) {
+        this.Session.stories[currentStoryIndex + 1].status = "Active";
       }
       this.ActiveStory.status = "Voted";
 
       this.$store.dispatch("UPDATE_SESSION", this.Session).then(() => {
-        alert(" voted");
+        alert(this.ActiveStory.storyName + " voted");
       });
     }
   },
@@ -184,7 +185,9 @@ export default {
 
   created() {
     this.$store.dispatch("GET_SESSION");
-    //selam2
+    setInterval(() => {
+      this.$store.dispatch("GET_SESSION");
+    }, 5000);
   }
 };
 </script>
