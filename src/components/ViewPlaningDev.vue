@@ -10,6 +10,9 @@
       </b-row>
       <b-row>
         <b-col> Session Name : {{ Session.sessionName }} </b-col>
+        <b-col style="text-align: right">
+          <p>{{ counter }} saniye içinde yenilenecektir</p>
+        </b-col>
       </b-row>
       <br />
       <b-row>
@@ -33,7 +36,7 @@
           >
           </b-table>
         </b-col>
-        <b-col cols="3" class="activeStory">
+        <b-col cols="3" class="active-story">
           Story {{ Session.storyName }}
           <!-- Story {{ ActiveStory.storyName }} -->
           <br />
@@ -43,7 +46,7 @@
             @click="voterPoint = num"
             class="box"
             :class="{ clicked: voterPoint == num }"
-            :disabled="voterPoint > 0"
+            :disabled="currentVoter.voterPoint > 0"
           >
             {{ num }}
           </button>
@@ -55,6 +58,18 @@
             v-if="currentVoter.voterPoint == 0"
             >Please Vote</b-button
           ><br />
+        </b-col>
+        <b-col
+          v-if="ActiveStory != null && isAllVoted"
+          cols="3"
+          class="scrum-master-panel"
+        >
+          <p>Story {{ ActiveStory.storyName }} is active</p>
+          <p>Scrum Master : {{ ActiveStory.scrumMasterScore }}</p>
+          <p v-for="voterName in Session.voterNames" :key="voterName.id">
+            {{ voterName }}:
+            {{ GetDeveloperPoint(voterName) }}
+          </p>
         </b-col>
       </b-row>
     </b-container>
@@ -83,16 +98,15 @@ export default {
   data() {
     return {
       isLoggedin: false,
-      voteNumbers: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, "?"],
       explanation: "açıklama",
       fields: [
         { key: "storyName", label: "Story Name" },
         { key: "storyPoint", label: "Story Point" },
         { key: "status", label: "Status" }
       ],
-      scrumMasterScore: 0,
       name: "",
-      voterPoint: 0
+      voterPoint: 0,
+      counter: 5
     };
   },
   methods: {
@@ -105,7 +119,6 @@ export default {
       }
     },
     Vote() {
-      debugger;
       this.currentVoter.voterPoint = this.voterPoint;
 
       this.$store.dispatch("UPDATE_SESSION", this.Session).then(() => {
@@ -119,47 +132,28 @@ export default {
       return this.ActiveStory.voters.find(x => x.voterName === this.name);
     }
   },
+  watch: {
+    "ActiveStory.storyName"(val) {
+      this.voterPoint = 0;
+    }
+  },
   created() {
     this.$store.dispatch("GET_SESSION");
+    setInterval(() => {
+      this.$store.dispatch("GET_SESSION");
+    }, 5000);
+
+    setInterval(() => {
+      this.counter--;
+      if (this.counter == 0) {
+        this.counter = 5;
+      }
+    }, 1000);
   }
 };
 </script>
 
 <style scoped>
-.card {
-  margin-top: 5rem;
-  margin-bottom: 3rem;
-  width: 10rem;
-  height: 10rem;
-  text-align: center;
-  font-size: 30px;
-  border: solid 5px;
-  border-color: rgb(103, 207, 241);
-  border-radius: 8px;
-}
-.activeStory {
-  width: 320px;
-  height: 400px;
-}
-.box {
-  width: 3rem;
-  height: 3rem;
-  border: solid 3px;
-  border-radius: 10px;
-  margin: 13px;
-  cursor: pointer;
-}
-.box:hover {
-  border-color: chartreuse;
-}
-.box:focus,
-.box.clicked {
-  background-color: chartreuse;
-}
-.please {
-  text-align: center;
-  margin-top: 20px;
-}
 .login {
   display: flex;
   align-items: center;
