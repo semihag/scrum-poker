@@ -11,13 +11,14 @@
       <b-row>
         <b-col> Session Name : {{ Session.sessionName }} </b-col>
         <b-col style="text-align: right">
-          <p>{{ counter }} saniye içinde yenilenecektir</p>
+          <p v-if="ActiveStory != null">{{ counter }} saniye içinde yenilenecektir</p>
         </b-col>
       </b-row>
       <br />
       <b-row>
         <b-col cols="6">Story List</b-col>
-        <b-col cols="3">Active Story</b-col>
+        <b-col v-if="ActiveStory != null" cols="3">Active Story</b-col>
+        <b-col v-else>OYLAMA SONA ERMİŞTİR</b-col>
       </b-row>
       <br />
       <b-row>
@@ -36,7 +37,7 @@
           >
           </b-table>
         </b-col>
-        <b-col cols="3" class="active-story">
+        <b-col v-if="ActiveStory != null" cols="3" class="active-story">
           Story {{ Session.storyName }}
           <!-- Story {{ ActiveStory.storyName }} -->
           <br />
@@ -59,6 +60,7 @@
             >Please Vote</b-button
           ><br />
         </b-col>
+
         <b-col
           v-if="ActiveStory != null && isAllVoted"
           cols="3"
@@ -84,7 +86,7 @@
           ></b-form-input>
           <br />
           <b-button variant="outline-primary" @click="Login" class="login"
-            >GİRİŞ YAP</b-button
+            >LOGIN</b-button
           >
         </b-col>
       </b-row>
@@ -106,14 +108,17 @@ export default {
       ],
       name: "",
       voterPoint: 0,
-      counter: 5
+      counter: 5,
+      countDownInterval: null,
+      getSessionInterval: null
     };
   },
   methods: {
     Login() {
       if (this.Session.voterNames.find(n => n === this.name)) {
         this.isLoggedin = true;
-        this.voterPoint = this.currentVoter.voterPoint;
+        this.voterPoint =
+          this.currentVoter != null ? this.currentVoter.voterPoint : 0;
       } else {
         alert("Böyle bir kullanıcı yok!!!");
       }
@@ -129,21 +134,32 @@ export default {
   computed: {
     ...mapGetters(["Session", "ActiveStory"]),
     currentVoter() {
-      return this.ActiveStory.voters.find(x => x.voterName === this.name);
+      if (this.ActiveStory != null)
+        return this.ActiveStory.voters.find(x => x.voterName === this.name);
+      return null;
     }
   },
   watch: {
     "ActiveStory.storyName"(val) {
       this.voterPoint = 0;
+    },
+    ActiveStory: {
+      handler(val) {
+        if (val == null) {
+          clearInterval(this.countDownInterval);
+          clearInterval(this.getSessionInterval);
+        }
+      },
+      deep: true
     }
   },
   created() {
     this.$store.dispatch("GET_SESSION");
-    setInterval(() => {
+    this.getSessionInterval = setInterval(() => {
       this.$store.dispatch("GET_SESSION");
     }, 5000);
 
-    setInterval(() => {
+    this.countDownInterval = setInterval(() => {
       this.counter--;
       if (this.counter == 0) {
         this.counter = 5;

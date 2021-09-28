@@ -20,7 +20,9 @@
       <b-row>
         <b-col> Session Name : {{ Session.sessionName }} </b-col>
         <b-col style="text-align: right">
-          <p>{{ counter }} saniye içinde yenilenecektir</p>
+          <p v-if="ActiveStory != null">
+            {{ counter }} saniye içinde yenilenecektir
+          </p>
         </b-col>
       </b-row>
       <br />
@@ -117,7 +119,9 @@ export default {
       ],
       scrumMasterScore: 0,
       finalScore: 0,
-      counter: 5
+      counter: 5,
+      countDownInterval: null,
+      getSessionInterval: null
     };
   },
   methods: {
@@ -152,10 +156,9 @@ export default {
       this.ActiveStory.status = "Voted";
 
       this.$store.dispatch("UPDATE_SESSION", this.Session).then(() => {
-        alert(this.ActiveStory.storyName + " voted");
+        alert("Voted");
       });
-    },
-
+    }
   },
   computed: {
     ...mapGetters(["Session", "ActiveStory"]),
@@ -166,17 +169,26 @@ export default {
       return this.ActiveStory.voters.every(
         x => x.voterPoint != this.ActiveStory.scrumMasterScore
       );
-    },
-    
+    }
+  },
+  watch: {
+    ActiveStory: {
+      handler(val) {
+        if (val == null) {
+          clearInterval(this.countDownInterval);
+          clearInterval(this.getSessionInterval);
+        }
+      },
+      deep: true
+    }
   },
   created() {
     this.$store.dispatch("GET_SESSION");
-    setInterval(() => {
+    this.getSessionInterval = setInterval(() => {
       this.$store.dispatch("GET_SESSION");
-
     }, 5000);
-   
-    setInterval(() => {
+
+    this.countDownInterval = setInterval(() => {
       this.counter--;
       if (this.counter == 0) {
         this.counter = 5;
@@ -187,8 +199,6 @@ export default {
 </script>
 
 <style scoped>
-
-
 #copy {
   cursor: pointer;
 }
